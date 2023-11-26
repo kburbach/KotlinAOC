@@ -3,72 +3,47 @@ package day9
 import println
 import readInput
 import day9.Motion.Direction
-import print
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-const val debug = true
+const val debug = false
 fun main() {
 
     val tailPositions =
         mutableSetOf<Pair<Int, Int>>() //set to keep track of [x,y] positions that the tail has visited
 
     //each knot starts at (0,0)
-    val knotPositions = MutableList(7) {
+    val knotPositions = MutableList(10) {
         0 to 0
     }
 
-    readInput("day9/test").also(::println).mapNotNull(Motion::tryParseMotion)
+    readInput("day9/test2").mapNotNull(Motion::tryParseMotion)
         .forEach { motion ->
-            //Gotta do this for each step
             "\nMoving ${motion.direction} ${motion.amount}".println(debug)
 
             for (i in 0..<motion.amount) {
-
-                //Left and down are moving to the negative, up and to the right are to the positive
-                val moveHead: Int.(Int) -> Int = when (motion.direction) {
-                    Direction.UP -> Int::plus
-                    Direction.DOWN -> Int::minus
-                    Direction.LEFT -> Int::minus
-                    Direction.RIGHT -> Int::plus
+                " -> Head was at ${knotPositions[0]}, moving ${motion.direction} 1".println(debug)
+                val diffAmount = when (motion.direction) {
+                    Direction.UP -> Pair(0, 1)
+                    Direction.DOWN -> Pair(0, -1)
+                    Direction.LEFT -> Pair(-1, 0)
+                    Direction.RIGHT -> Pair(1, 0)
                 }
 
                 //up/down is on the y component, left/right is on the x component
-                "-> Head was at ${knotPositions.first()}, but moving ${motion.direction} by 1 ->".print(
-                    debug
-                )
-                knotPositions[0] = when (motion.direction) {
-                    Direction.UP, Direction.DOWN -> knotPositions[0].copy(
-                        second = knotPositions[0].second.moveHead(
-                            1
-                        )
-                    )
-
-                    Direction.RIGHT, Direction.LEFT -> knotPositions[0].copy(
-                        first = knotPositions[0].first.moveHead(
-                            1
-                        )
-                    )
-                }
-
-                //Assign the new position back to the array of positions
-                " Now at ${knotPositions[0]}".println(debug)
+                knotPositions[0] += diffAmount
+                "Head now at ${knotPositions[0]}".println(debug)
 
                 //If the head position is ever > 1 away from the tail position, we need to move the tail
                 for (k in 0..<knotPositions.lastIndex) {
                     knotPositions[k + 1] =
-                        updateKnotPosition(knotPositions[k], knotPositions[k + 1], k+1)
+                        updateKnotPosition(knotPositions[k], knotPositions[k + 1])
+                    "Tail[${k + 1}] at ${knotPositions[k + 1]}".println(debug)
                 }
 
-                //Adding tail position to the set
-                tailPositions.add(knotPositions.last()).also {
-                    if (it) {
-                        "Added ${knotPositions.last()} to set".println(debug)
-                    } else {
-                        "Didn't add ${knotPositions.last()}, was a dup".println(debug)
-                    }
-                }
+                //Adding tail position to the set, which automatically takes care of duplicates
+                tailPositions.add(knotPositions.last())
             }
         }
 
@@ -77,106 +52,31 @@ fun main() {
 
 //Returns new tail position
 internal fun updateKnotPosition(
-    headPosition: Pair<Int, Int>,
-    tailPosition: Pair<Int, Int>,
-    tailIndex: Int //for debug
-): Pair<Int, Int> {
+    head: Pair<Int, Int>,
+    tail: Pair<Int, Int>,
+) = if (head.distanceBetween(tail) >= 2) { // need to update if the tail lags too far behind head
+    val vertDiff = if (head.second - tail.second > 0) -1 else 1
+    val horDiff = if (head.first - tail.first > 0) -1 else 1
 
-    var newTailPosition = tailPosition
-    if (headPosition.distanceBetween(tailPosition) >= 2) {// gotta move!
-        "-> Moving Tail${tailIndex}!".println(debug)
-        val headIsRightOfTail = headPosition.first - tailPosition.first > 0
-        val headIsUpOfTail = headPosition.second - tailPosition.second > 0
-
-        if (headPosition.first - tailPosition.first == 0) {// same column or x coordinate
-           // "    -> H and T share X coordinate".println(debug)
-            newTailPosition =
-                if (headIsUpOfTail) { // head is further up, move tail to head.y -1
-                    tailPosition.copy(second = headPosition.second - 1)
-                } else { // head is further left, move tail to head.y + 1
-                    tailPosition.copy(second = headPosition.second + 1)
-                }
-        } else if (headPosition.second - tailPosition.second == 0) { //same row or y coordinate
-          //  "    -> H and T share Y coordinate".println(debug)
-            newTailPosition =
-                if (headIsRightOfTail) { // head is further up, move tail to head.second -1
-                    tailPosition.copy(first = headPosition.first - 1)
-                } else { // head is further left, move tail to head.second + 1
-                    tailPosition.copy(first = headPosition.first + 1)
-                }
-        } else { // This is the hard one
-          //  "    -> H and T are diagonally!".println(debug)
-            val furtherAwayVertically =
-                headPosition.isFurtherAwayVertically(tailPosition)
-
-            if (headIsUpOfTail) { //head is above of tail
-              //  "       -> H is above T ".print(debug)
-                newTailPosition =
-                    if (furtherAwayVertically) { // if its further away vertically,
-                        // the tail is going to match the head's vertical component
-                        //it doesn't matter who is left of who
-                 //       "and further away vertically".println(debug)
-                        Pair(
-                            first = headPosition.first,
-                            second = headPosition.second - 1
-                        )
-                    }
-                    //if its further away horizontally, the tail is going to match the head's
-                    // vertical component, BUT it does matter if the head.x > tail.x or not
-                    else if (headIsRightOfTail) { // if head.x > tail.x, move tail.x to head.x -1
-                        //"and further away horizontally".println(debug)
-                      //  "         -> H is right of T ".println(debug)
-                        Pair(
-                            first = headPosition.first - 1,
-                            second = headPosition.second
-                        )
-                    } else { //head.x < tail.x, but !furtherAwayVertically
-                      //  "and further away horizontally".println(debug)
-                       // "         -> H is left of T ".println(debug)
-                        Pair(
-                            first = headPosition.first + 1,
-                            second = headPosition.second
-                        )
-                    }
-
-            } else { //head below tail
-               // "       -> H is below T ".print(debug)
-                newTailPosition =
-                    if (furtherAwayVertically) { // if its further away vertically, the tail is going to match the head's vertical component
-                      //  "and further away vertically".println(debug)
-                        Pair(
-                            first = headPosition.first,
-                            second = headPosition.second + 1
-                        )
-                    } else if (headIsRightOfTail) { // if head.x > tail.x, move tail.x to head.x -1
-                       // "and further away horizontally".println(debug)
-                       // "         -> H is right of T ".println(debug)
-                        Pair(
-                            first = headPosition.first - 1,
-                            second = headPosition.second
-                        )
-                    } else { //if its further away horizontally, the tail is going to match the head's vertical component. b
-                       // "and further away horizontally".println(debug)
-                      //  "         -> H is left of T ".println(debug)
-                        Pair(
-                            first = headPosition.first + 1,
-                            second = headPosition.second
-                        )
-                    }
-            }
-        }
+    val diffAmount = when {
+        head < tail -> Pair(horDiff, 0) // greater horizontal distance than vertical
+        head > tail -> Pair(0, vertDiff) // greater vertical distance than horizontal
+        else -> Pair(horDiff, vertDiff) //equal horiz/vertical distance (0,0) to (2,2) for instance
     }
-    return newTailPosition.also {
-        "Tail${tailIndex} at $it".println(debug)
-    }
+    head + diffAmount
+} else { // no change to tail
+    tail
 }
 
 internal fun Pair<Int, Int>.distanceBetween(other: Pair<Int, Int>) =
     sqrt((other.first - first).toFloat().pow(2) + (other.second - second).toFloat().pow(2))
 
-//If the vertical difference between 2 points is greater than the horizontal difference between 2 points
-internal fun Pair<Int, Int>.isFurtherAwayVertically(other: Pair<Int, Int>) =
-    abs(other.second - second) > abs(other.first - first)
+internal operator fun Pair<Int, Int>.plus(other: Pair<Int, Int>) =
+    Pair(first + other.first, second + other.second)
+
+
+internal operator fun Pair<Int, Int>.compareTo(other: Pair<Int, Int>) =
+    abs(other.second - second) - abs(other.first - first)
 
 internal data class Motion(val direction: Direction, val amount: Int) {
 
@@ -211,6 +111,4 @@ internal data class Motion(val direction: Direction, val amount: Int) {
             }
         }
     }
-
-
 }
