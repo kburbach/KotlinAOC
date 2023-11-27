@@ -1,3 +1,8 @@
+package day1
+
+import println
+import readInput
+
 fun main() {
 
     val lines = readInput("input")
