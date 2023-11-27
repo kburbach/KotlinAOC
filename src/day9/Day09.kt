@@ -3,9 +3,6 @@ package day9
 import println
 import readInput
 import day9.Motion.Direction
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 const val debug = false
 fun main() {
@@ -18,7 +15,8 @@ fun main() {
         0 to 0
     }
 
-    readInput("day9/test2").mapNotNull(Motion::tryParseMotion)
+    val fileName = "day9/inputs/test2"
+    readInput(fileName).mapNotNull(Motion::tryParseMotion)
         .forEach { motion ->
             "\nMoving ${motion.direction} ${motion.amount}".println(debug)
 
@@ -66,49 +64,4 @@ internal fun updateKnotPosition(
     head + diffAmount
 } else { // no change to tail
     tail
-}
-
-internal fun Pair<Int, Int>.distanceBetween(other: Pair<Int, Int>) =
-    sqrt((other.first - first).toFloat().pow(2) + (other.second - second).toFloat().pow(2))
-
-internal operator fun Pair<Int, Int>.plus(other: Pair<Int, Int>) =
-    Pair(first + other.first, second + other.second)
-
-
-internal operator fun Pair<Int, Int>.compareTo(other: Pair<Int, Int>) =
-    abs(other.second - second) - abs(other.first - first)
-
-internal data class Motion(val direction: Direction, val amount: Int) {
-
-    enum class Direction {
-        UP, DOWN, LEFT, RIGHT
-    }
-
-    companion object {
-
-        private const val rightDirString = "R"
-        private const val leftDirString = "L"
-        private const val upDirString = "U"
-        private const val downDirString = "D"
-
-        fun tryParseMotion(input: String): Motion? {
-            input.split(" ", limit = 2).let {
-                val direction = when (it.first()) {
-                    rightDirString -> Direction.RIGHT
-                    leftDirString -> Direction.LEFT
-                    upDirString -> Direction.UP
-                    downDirString -> Direction.DOWN
-                    else -> null
-                }
-                val amount = it.last().toIntOrNull()
-
-                return if (direction == null || amount == null) {
-                    "Input sux".println()
-                    null
-                } else {
-                    Motion(direction, amount)
-                }
-            }
-        }
-    }
 }
