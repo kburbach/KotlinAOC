@@ -1,95 +1,63 @@
 package day10
 
-import print
-import println
 import readInput
 
-const val debug = true
-
-//const val fileName = "test1"
-//const val fileName = "test2"
 const val fileName = "input"
+const val filePath = "day10/inputs/"
+
 fun main() {
-    var registerValue = 1
+    var registerValue = 1 //now contains the location of the center of the sprite
     var onCycleNum = 0
 
-    val signalStrengths = mutableListOf<Int>()
-    val operationQueue: ArrayDeque<Operation.Addx> = ArrayDeque()
+    val operationQueue: ArrayDeque<Operation.Addx> = ArrayDeque(1)
 
-    val specialCycles = listOf(20, 60, 100, 140, 180, 220)
+    val horizontalPixelSize = 40
+    val currentRowPixels = mutableListOf<Pixel>()
+    val pixelList = mutableListOf<List<Pixel>>()
 
-    val lines = readInput("day10/inputs/$fileName")
+    val lines = readInput("$filePath$fileName")
         .mapNotNull(Operation::fromString)
 
     var i = 0
     while (i <= lines.lastIndex) {
         //Always increment the cycles, because this is going to be separate from the index counter
         onCycleNum++
-        " -> Cycle #$onCycleNum starting".println(debug)
-        " -> Index is $i".println(debug)
 
-        //Check for special cycle first I guess
-        if (onCycleNum in specialCycles) {
-            "Cycle $onCycleNum reached! Adding ${registerValue * onCycleNum} to list".print(debug)
-            signalStrengths.add(registerValue * onCycleNum)
+        //Figure out what pixel is drawn at the current pixel position
+        val pixelPosition = (onCycleNum - 1) % horizontalPixelSize
+        getPixelDrawn(pixelPosition, registerValue).let {
+            currentRowPixels.add(it)
+        }
+
+        //Determine when to end the row of pixels and start a new one
+        if (onCycleNum % horizontalPixelSize == 0) {
+            pixelList.add(currentRowPixels.toList())
+            currentRowPixels.clear()
         }
 
         //See if there is a queued up add (aka the 2nd cycle of this addx)
         if (!operationQueue.isEmpty()) {
             operationQueue.removeFirst().let {
-                "  --> Pulling $it from queue".println(debug)
                 registerValue += it.value
-                "  --> registerValue is now $registerValue".println(debug)
             }
         } else {
-            val operation = lines[i]
-            "New operation is $operation: ".println(debug)
-
-            when (operation) {
+            when (val operation = lines[i]) {
                 is Operation.Noop -> {
                     //do nothing
                 }
 
-                //If its an ADDx operation, just add it to the queue for the next cycle, but keep the index
                 is Operation.Addx -> {
-                    //For the first cycle of this add,
-                    // don't do anything (except add to the queue for next time
+                    //For the first cycle of this add, don't do anything
+                    //(except add to the queue for the next cycle)
                     operationQueue.addFirst(operation)
-                    " --> Added $operation to operationQueue".println(debug)
                 }
             }
 
-            //Only if an operation was preformed do we increment the index. If popping from the queue
-            //we keep index the same to not miss an operation
+            //Only if an operation was performed do we increment the index. If popping from the
+            //queue, we keep index the same to not miss an operation
             i++
         }
-
-        " -> Cycle #$onCycleNum finished\n".println(debug)
     }
 
-    signalStrengths.println(debug)
-    signalStrengths.sum().println(debug)
-}
-
-sealed class Operation {
-
-    data class Addx(val value: Int) : Operation()
-    data object Noop : Operation()
-
-    companion object {
-        fun fromString(s: String): Operation? {
-
-            val parts = s.split(" ", limit = 2)
-
-            val cmd = parts[0]
-            val value = parts.getOrNull(1)?.toInt()
-
-            return when (cmd) {
-                "addx" -> value?.let { Addx(it) }
-                "noop" -> Noop
-                else -> null
-            }
-        }
-
-    }
+    pixelList.pixelPrint()
 }
