@@ -5,18 +5,19 @@ import println
 import readInput
 
 const val debug = true
+
 //const val fileName = "test1"
 //const val fileName = "test2"
 const val fileName = "input"
 fun main() {
     var registerValue = 1
-    var onCycleNum = 0 //0 or 1 here?
+    var onCycleNum = 0
 
     val signalStrengths = mutableListOf<Int>()
-
-    //Dont know how long the input is, so lazily create a sequence of 20, 60, 100, 140, etc
-    val specialCycles = listOf(20, 60, 100, 140, 180, 220)
     val operationQueue: ArrayDeque<Operation.Addx> = ArrayDeque()
+
+    val specialCycles = listOf(20, 60, 100, 140, 180, 220)
+
     val lines = readInput("day10/inputs/$fileName")
         .mapNotNull(Operation::fromString)
 
@@ -28,8 +29,8 @@ fun main() {
         " -> Index is $i".println(debug)
 
         //Check for special cycle first I guess
-        if( onCycleNum in specialCycles){
-            "Cycle $onCycleNum reached! Adding ${registerValue*onCycleNum} to list".print(debug)
+        if (onCycleNum in specialCycles) {
+            "Cycle $onCycleNum reached! Adding ${registerValue * onCycleNum} to list".print(debug)
             signalStrengths.add(registerValue * onCycleNum)
         }
 
@@ -63,20 +64,17 @@ fun main() {
             i++
         }
 
-
-
         " -> Cycle #$onCycleNum finished\n".println(debug)
-
     }
 
     signalStrengths.println(debug)
     signalStrengths.sum().println(debug)
 }
 
-sealed class Operation(numCycles: Int) {
+sealed class Operation {
 
-    data class Addx(val value: Int) : Operation(2)
-    data object Noop : Operation(1)
+    data class Addx(val value: Int) : Operation()
+    data object Noop : Operation()
 
     companion object {
         fun fromString(s: String): Operation? {
