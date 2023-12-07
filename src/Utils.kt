@@ -1,3 +1,4 @@
+import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.io.path.Path
@@ -25,3 +26,8 @@ fun Any?.println(debugMode: Boolean = true) = debugMode.let {debug ->
 fun Any?.print(debugMode: Boolean = true) = debugMode.let {debug ->
     if(debug) print(this)
 }
+/**
+ * Reads the input as a single String.
+ */
+fun readText(name: String) = File("src", "$name.txt")
+    .readText()

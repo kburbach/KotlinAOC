@@ -1,77 +1,59 @@
-package day11
+import day11.getMonkeys
+import day11.getTestMonkeys
 
-import println
-import kotlin.system.measureTimeMillis
+/*
+ * Copyright (c) 2022 by Todd Ginsberg
+ */
 
-const val debug = false
+/**
+ * Advent of Code 2022, Day 11 - Monkey in the Middle
+ * Problem Description: http://adventofcode.com/2022/day/11
+ * Blog Post/Commentary: https://todd.ginsberg.com/post/advent-of-code/2022/day11/
+ */
+
+
 fun main() {
-    val numRounds = 2000
-    val monkeys = getTestMonkeys()
-
-    val testDivisibleBySum = monkeys.sumOf { it.testIsDivisibleBy }
-
-//    val monkeys = getMonkeys()
-    measureTimeMillis {
-        for (i in 1..numRounds) {
-
-//            if (debug) {
-//                "Round $i Start ->".println()
-//                monkeys.forEachIndexed { idx, monkey ->
-//                    "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
-//                }
-//                "".println()
-//            }
-
-            monkeys.forEachIndexed { idx, monkey ->
-//                "Monkey $idx has ${monkey.items().count()} items to look at".println(debug)
-                monkey.forEach { item ->
-//                    "Monkey $idx looking at $item".println(debug)
-                    monkey.inspectNextItem(item, debug).let {
-                        monkeys[it.second].receiveItem(it.first)
-                    }
-                }
-//
-//                if (debug) {
-//                    "".println()
-//                    monkeys.forEachIndexed { idx, monkey ->
-//                        " -> Monkey $idx has ${monkey.items()} -> ${
-//                            monkey.items().count()
-//                        }".println()
-//
-//                    }
-//                    "".println()
-//                }
-            }
-//
-//            if (debug) {
-//                "Round $i End ->".println()
-//                monkeys.forEachIndexed { idx, monkey ->
-//                    "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
-//                }
-//                "".println()
-//            }
-
-
-            if (debug || i % 20 == 0 || i % 1000 == 0) {
-                "After Round $i ->".println()
-                monkeys.forEachIndexed { idx, m ->
-                    "Monkey $idx has inspected ${m.numInspectionsPerformed}".println()
-                }
-                println()
-            }
-
-
+    val monkeys = getMonkeys()
+    fun rounds(numRounds: Int, changeToWorryLevel: (Long) -> Long) {
+        repeat(numRounds) {
+            monkeys.forEach { it.inspectItems(monkeys, changeToWorryLevel) }
         }
-    }.println()
+    }
+    fun solvePart1(): Long {
+        rounds(20) { it / 3 }
+        return monkeys.business()
+    }
 
-//        calculateMonkeyBusiness(monkeys).println()
+    fun solvePart2(): Long {
+        val testProduct: Long = monkeys.map { it.test }.reduce(Long::times)
+        rounds(10000) { it % testProduct }
+        return monkeys.business()
+    }
+
+    solvePart2().println()
 
 }
 
-fun calculateMonkeyBusiness(monkeys: List<Monkey>) =
-    monkeys.map(Monkey::numInspectionsPerformed)
-        .sortedDescending()
-        .take(2)
-        .fold(1) { acc, next ->
-            acc * next
+fun List<Monkey>.business(): Long =
+    sortedByDescending { it.interactions }.let { it[0].interactions * it[1].interactions }
+
+class Monkey(
+    val items: MutableList<Long>,
+    val operation: (Long) -> Long,
+    val test: Long,
+    val trueMonkey: Int,
+    val falseMonkey: Int
+) {
+
+    var interactions: Long = 0
+
+    fun inspectItems(monkeys: List<Monkey>, changeToWorryLevel: (Long) -> Long) {
+        items.forEach { item ->
+            val worry = changeToWorryLevel(operation(item))
+            val target = if (worry % test == 0L) trueMonkey else falseMonkey
+            monkeys[target].items.add(worry)
         }
+        interactions += items.size
+        items.clear()
+    }
+}
