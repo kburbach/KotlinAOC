@@ -5,7 +5,7 @@ import println
 
 class Monkey(
     vararg currentItems: Int,
-    private val testIsDivisibleBy: Int,
+    val testIsDivisibleBy: Int,
     private val inspectionOperation: (Factor).() -> Factor,
     val passedTestMonkey: Int,
     val failedTestMonkey: Int
