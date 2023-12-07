@@ -2,44 +2,57 @@ package day11
 
 import println
 
+const val debug = false
 fun main() {
-    val numRounds = 20
-//    val monkeys = getTestMonkeys()
-    val monkeys = getMonkeys()
+    val numRounds = 2000
+    val monkeys = getTestMonkeys()
+//    val monkeys = getMonkeys()
     for (i in 1..numRounds) {
 
-        "Round $i Start ->".println()
-        monkeys.forEachIndexed { idx, monkey ->
-            "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
+        if(debug) {
+            "Round $i Start ->".println()
+            monkeys.forEachIndexed { idx, monkey ->
+                "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
+            }
+            "".println()
         }
-        "".println()
+
         monkeys.forEachIndexed{idx,  monkey ->
-            "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
+            "Monkey $idx has ${monkey.items().count()} items to look at".println(debug)
             monkey.forEach { item ->
-                monkey.inspectNextItem(item).let {
+                    "Monkey $idx looking at $item".println(debug)
+                monkey.inspectNextItem(item, debug).let {
                     monkeys[it.second].receiveItem(it.first)
                 }
             }
-            "".println()
-            monkeys.forEachIndexed { idx, monkey ->
-                " -> Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
 
+            if(debug) {
+                "".println()
+                monkeys.forEachIndexed { idx, monkey ->
+                    " -> Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
+
+                }
+                "".println()
+            }
+        }
+
+        if(debug) {
+            "Round $i End ->".println()
+            monkeys.forEachIndexed { idx, monkey ->
+                "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
             }
             "".println()
         }
 
-        "Round $i End ->".println()
-        monkeys.forEachIndexed { idx, monkey ->
-            "Monkey $idx has ${monkey.items()} -> ${monkey.items().count()}".println()
-        }
-        "".println()
 
 
-
+        if(debug || i == 20 || i%1000==0) {
+            "After Round $i ->".println()
             monkeys.forEachIndexed { idx, m ->
                 "Monkey $idx has inspected ${m.numInspectionsPerformed}".println()
             }
             println()
+        }
 
 
 

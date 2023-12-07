@@ -4,8 +4,10 @@ import println
 
 open class Factor(
     private val value: Int = 0,
-    private val factors: List<Factor> = listOf()
+    private val factors: List<Factor> = listOf(),
+    private val debug: Boolean = false
 ) {
+
 
     override fun toString(): String {
         return with(StringBuilder()) {
@@ -70,6 +72,7 @@ open class Factor(
         }
     }
 
+    //Dis boi naughty
     val totalValue by lazy {
         calculateValue()
     }
@@ -77,7 +80,7 @@ open class Factor(
     private fun calculateValue(): Int {
         val childrenVal =
             factors.takeIf { it.isNotEmpty() }?.fold(1) { acc, next ->
-                val nextVal = acc * next.calculateValue()
+                val nextVal = StrictMath.multiplyExact(acc, next.calculateValue())
                 nextVal
             } ?: 0
 
@@ -92,14 +95,50 @@ open class Factor(
     //Say this factor was Factor(4, listOf(Factor(4), Factor(5)) -- this is basically 4 + (4*5)
     // -- adding i to this will return Factor(i, Factor(4, listOf(Factor(4), Factor(5)))
     operator fun plus(i: Int) = if (factors.isEmpty()) { // just a number basically
-        Factor(i + value)
+        Factor(i + value).also {
+            "Empty: Adding $i to $this to get $it".println(debug)
+        }
     } else { //if we have other factors aka 1+(4*5), we can't just add to the sum, we need to create a whole new factor
         Factor(i, factors = listOf(this))
     }
 
-    operator fun times(i: Int) = Factor(factors = listOf(Factor(i), Factor(value, factors)))
+    operator fun times(i: Int) = times(Factor(i))
 
+    operator fun times(other: Factor): Factor {
 
-    operator fun times(other: Factor) = Factor(factors = listOf(this, other))
+        val myList: List<Factor> = if (this.value != 0) {
+            listOf(this)
+        } else {
+            factors
+        }
+
+        val otherList: List<Factor> = if (other.value != 0) {
+            listOf(other)
+        } else {
+            other.factors
+        }
+
+        val youDumbBitch: List<Factor> = myList + otherList
+        return Factor(factors = youDumbBitch).also {
+            "Turning $this * $other into $it".println(debug)
+        }
+    }
+
+    //(a+b)mod z = (a mod z + b mod z) mod z
+    //so if b is the factors, i.e. a list of x *y *t, then b mod z is (x mod z * y mod z * t mod z) mod z
+    operator fun rem(i: Int): Int {
+
+        return if(factors.isEmpty()){
+            value.rem(i)
+        }
+        else {
+            (value.rem(i) +
+                    (factors.fold(1) { acc: Int, factor: Factor ->
+
+                        acc * factor.rem(i)
+                    }).rem(i))
+                .rem(i)
+        }
+    }
 
 }
