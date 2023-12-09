@@ -1,8 +1,8 @@
-package day9
+package _2022.day9
 
 import println
 import readInput
-import day9.Motion.Direction
+import _2022.day9.Motion.Direction
 
 const val debug = false
 fun main() {

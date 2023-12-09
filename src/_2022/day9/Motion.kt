@@ -1,4 +1,4 @@
-package day9
+package _2022.day9
 
 /**
  * Data class to represent a movement instruction

@@ -1,7 +1,7 @@
-package day7
+package _2022.day7
 
-import day7.Node.*
-import day7.Command.DestinationType
+import _2022.day7.Node.*
+import _2022.day7.Command.DestinationType
 import println
 import readInput
 
