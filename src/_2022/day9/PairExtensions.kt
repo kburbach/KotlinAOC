@@ -1,4 +1,4 @@
-package day9
+package _2022.day9
 
 import kotlin.math.abs
 import kotlin.math.pow

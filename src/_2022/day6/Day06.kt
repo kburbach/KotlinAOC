@@ -1,4 +1,4 @@
-package day6
+package _2022.day6
 
 import println
 import readInput

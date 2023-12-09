@@ -1,4 +1,4 @@
-package day10
+package _2022.day10
 
 sealed class Pixel(private val s: String) {
     final override fun toString() = s
