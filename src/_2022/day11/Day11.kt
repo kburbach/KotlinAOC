@@ -1,5 +1,4 @@
-import day11.getMonkeys
-import day11.getTestMonkeys
+import _2022.day11.getMonkeys
 
 /*
  * Copyright (c) 2022 by Todd Ginsberg
@@ -8,7 +7,7 @@ import day11.getTestMonkeys
 /**
  * Advent of Code 2022, Day 11 - Monkey in the Middle
  * Problem Description: http://adventofcode.com/2022/day/11
- * Blog Post/Commentary: https://todd.ginsberg.com/post/advent-of-code/2022/day11/
+ * Blog Post/Commentary: https://todd.ginsberg.com/post/advent-of-code/2022/_2022.day11/
  */
 
 

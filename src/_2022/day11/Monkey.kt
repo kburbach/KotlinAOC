@@ -1,4 +1,4 @@
-//package day11
+//package _2022.day11
 //
 //import print
 //import println
