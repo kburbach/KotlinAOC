@@ -117,8 +117,7 @@ fun Regex.findFirstAndLast(input: String) =
 inline fun <reified T> List<T>.sum() = fold("") { acc: String, result: T ->
     when (T::class) {
         MatchResult::class -> (result as MatchResult).value
-        String::class -> result
-        Char::class -> result
+        String::class -> result as String
         else -> ""
     }.let { r ->
         acc + r
