@@ -7,68 +7,63 @@ import readInput
 fun main() {
 
     val filePath = "_2023/day3/input/"
-//    val fileName = "test_input"
+//    val fileName = "test_input2"
     val fileName = "input"
 
-    val lines = readInput(filePath + fileName)
-
-    var previousLine = ""
-    var previousSymbolLocations: List<IndexedValue<Char>> = emptyList()
+    var previousSymbols: List<Symbol> = emptyList()
     var previousPartNumbers: List<PartNumber> = emptyList()
 
-    lines.sumOf { currentLine ->
-        previousLine.println()
-        currentLine.println()
+    readInput(filePath + fileName)
+        .flatMap { currentLine ->
 
-        val currentSymbolLocations = currentLine.findSymbols()
-        val currentPartNumbers = currentLine.findPartNumbers()
+            val currentSymbols = currentLine.findSymbols()
+            val currentPartNumbers = currentLine.findPartNumbers()
 
-        //Current symbols that touch either previous partNumbers or current pNs
-        val currentSymbolsTouchedPartNumbers = currentSymbolLocations.flatMap { symbol ->
-            (previousPartNumbers + currentPartNumbers).filter { pN ->
-                pN.touchesIndex(symbol.index)
-            }.map {
-                symbol to it
-            }
-        }
+            (
+                    //Current symbols that touch either previous partNumbers or current partNumbers
+                    currentSymbols.flatMap { symbol ->
+                        (previousPartNumbers + currentPartNumbers).filter { pN ->
+                            pN.touchesIndex(symbol.index)
+                        }.map {
+                            symbol to it
+                        }
+                    } +
 
-        //Previous symbols that touch current pNs (previous -> previous already covered)
-        val previousSymbolsTouchedPartNumbers = previousSymbolLocations.flatMap { symbol ->
-            currentPartNumbers.filter { pN ->
-                pN.touchesIndex(symbol.index)
-            }.map {
-                symbol to it
-            }
-        }
-        
-        (currentSymbolsTouchedPartNumbers + previousSymbolsTouchedPartNumbers)
-            .also {
-                " -> ${it.size} total touches".println()
-            }
-            .sortedBy {
-                it.first.index
-            }
-            .sumOf {
-                val partNumber = it.second
-                val symbol = it.first
-
-                "   -> ${symbol.value}(${symbol.index}) touches ${partNumber.number}".println()
-
-                partNumber.number
-            }.also {
-                //USE TOLIST() to actually make a copy
+                    //Previous symbols that touch current partNumbers
+                    previousSymbols.flatMap { symbol ->
+                        currentPartNumbers.filter { pN ->
+                            pN.touchesIndex(symbol.index)
+                        }.map {
+                            symbol to it
+                        }
+                    }
+            ).also {
                 previousPartNumbers = currentPartNumbers.toList()
-                previousSymbolLocations = currentSymbolLocations.toList()
-                previousLine = currentLine
-                "\n -> This Row Total: $it\n".println()
+                previousSymbols = currentSymbols.toList()
             }
-    }.println()
-
+        }
+        .groupBy( //map list of Pair<Symbol, PartNumber> to a Map<Symbol, List<PartNumber>>
+            keySelector = {
+                it.first
+            },
+            valueTransform = {
+                it.second
+            }
+        ).filterValues {//gears are symbols that touch only 2 partNumbers
+            it.size == 2
+        }.mapValues {//map each gear to the actual gear ratio
+            it.value.fold(1) { acc, partNumber ->
+                acc * partNumber.number
+            }
+        }
+        .values
+        .sum()//sum up all the gear ratios
+        .println()
 }
 
-fun String.findSymbols(): List<IndexedValue<Char>> = this.toCharArray().withIndex().filter {
+fun String.findSymbols(): List<Symbol> = this.toCharArray().withIndex().filter {
     !it.value.isLetterOrDigit() && it.value != '.'
-}
+}.map { Symbol(it.value, it.index) }
 
 fun String.findPartNumbers(): List<PartNumber> {
     var startIndex = 0
@@ -101,7 +96,9 @@ fun String.findPartNumbers(): List<PartNumber> {
     return list
 }
 
-data class PartNumber(val number: Int, val indexRange: IntRange) {
+class PartNumber(val number: Int, val indexRange: IntRange) {
     fun touchesIndex(index: Int) =
         indexRange.contains(index) || indexRange.first == index + 1 || indexRange.last == index - 1
 }
+
+class Symbol(val value: Char, val index: Int)
