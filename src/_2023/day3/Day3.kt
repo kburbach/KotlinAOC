@@ -6,9 +6,9 @@ import readInput
 
 fun main() {
 
-    val filePath = "_2023/day3/"
-    val fileName = "test_input"
-//    val fileName = "input"
+    val filePath = "_2023/day3/input/"
+//    val fileName = "test_input"
+    val fileName = "input"
 
     val lines = readInput(filePath + fileName)
 
@@ -16,40 +16,34 @@ fun main() {
     var previousSymbolLocations: List<IndexedValue<Char>> = emptyList()
     var previousPartNumbers: List<PartNumber> = emptyList()
 
-    val temp = listOf(
-        "958...........319....@.....+.334..........640.................................798.........611......678.....*..630.......389............426..",
-        ".........../............961..*..................608..472...........45...........*...................*....390.............*..................",
-        ".....597..191......&861.......279.689.............=....*.972*..........560......900.............548..97.......240...51....2....411.......233"
-    )
     lines.sumOf { currentLine ->
         previousLine.println()
         currentLine.println()
-        //look for symbols in currentLine
+
         val currentSymbolLocations = currentLine.findSymbols()
         val currentPartNumbers = currentLine.findPartNumbers()
 
-        (
-                //Current symbols that touch either previous partNumbers or current pNs
-                currentSymbolLocations.flatMap { symbol ->
-                    (previousPartNumbers + currentPartNumbers).filter { pN ->
-                        pN.touchesIndex(symbol.index)
-                    }.map {
-                        symbol to it
-                    }
-                }
+        //Current symbols that touch either previous partNumbers or current pNs
+        val currentSymbolsTouchedPartNumbers = currentSymbolLocations.flatMap { symbol ->
+            (previousPartNumbers + currentPartNumbers).filter { pN ->
+                pN.touchesIndex(symbol.index)
+            }.map {
+                symbol to it
+            }
+        }
 
-                        +
-
-                        //Previous symbols that touch current pNs (previous -> previous already covered)
-                        previousSymbolLocations.flatMap { symbol ->
-                            currentPartNumbers.filter { pN ->
-                                pN.touchesIndex(symbol.index)
-                            }.map {
-                                symbol to it
-                            }
-                        }
-                ).also {
-                    " -> ${it.size} total touches".println()
+        //Previous symbols that touch current pNs (previous -> previous already covered)
+        val previousSymbolsTouchedPartNumbers = previousSymbolLocations.flatMap { symbol ->
+            currentPartNumbers.filter { pN ->
+                pN.touchesIndex(symbol.index)
+            }.map {
+                symbol to it
+            }
+        }
+        
+        (currentSymbolsTouchedPartNumbers + previousSymbolsTouchedPartNumbers)
+            .also {
+                " -> ${it.size} total touches".println()
             }
             .sortedBy {
                 it.first.index
@@ -80,9 +74,11 @@ fun String.findPartNumbers(): List<PartNumber> {
     var startIndex = 0
     var value = 0
     val list = mutableListOf<PartNumber>()
-    this.toCharArray().map {
+    val digitsOrNull = this.toCharArray().map {
         it.digitToIntOrNull()
-    }.forEachIndexed { idx, int ->
+    }
+
+    digitsOrNull.forEachIndexed { idx, int ->
         if (int == null) {
             if (startIndex < idx) {
                 list.add(
@@ -94,6 +90,12 @@ fun String.findPartNumbers(): List<PartNumber> {
         } else {
             value = value * 10 + int
         }
+    }
+
+    if (startIndex <= digitsOrNull.lastIndex) {
+        list.add(
+            PartNumber(number = value, indexRange = startIndex..digitsOrNull.lastIndex)
+        )
     }
 
     return list
